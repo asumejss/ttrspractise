@@ -5,9 +5,10 @@
   <title>ttrspractise - Times Tables Trainer</title>
   <style>
     body {
-      background-image: url('https://www.transparenttextures.com/patterns/math.png'); /* Replace with a math-themed image URL */
-      background-repeat: repeat;
-      background-color: #f0f0f0; /* Fallback background color */
+      background-image: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpeg');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
       color: #333;
       font-family: Arial, sans-serif;
       display: flex;
@@ -16,14 +17,29 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
+      position: relative;
+      z-index: 0;
     }
+
+    /* Overlay to make content more readable */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(255, 255, 255, 0.5); /* Light overlay */
+      z-index: -1;
+    }
+
     h1 {
-      color: #00ffcc;
+      color: #00bb99;
     }
+
     .question, .score, .timer, .result {
       font-size: 1.5rem;
       margin: 10px;
     }
+
     .options {
       display: flex;
       flex-wrap: wrap;
@@ -31,6 +47,7 @@
       justify-content: center;
       margin: 20px 0;
     }
+
     .option {
       background-color: #333;
       color: white;
@@ -40,10 +57,12 @@
       cursor: pointer;
       font-size: 1.2rem;
     }
+
     .option:hover {
       background-color: #00ffcc;
       color: #000;
     }
+
     select, button {
       font-size: 1rem;
       padding: 6px 10px;
@@ -53,6 +72,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
     .hidden {
       display: none;
     }
