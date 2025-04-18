@@ -9,7 +9,7 @@
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center center;
-      color: #333;
+      color: #000;
       font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
@@ -18,26 +18,29 @@
       height: 100vh;
       margin: 0;
       position: relative;
-      z-index: 0;
     }
 
-    /* Overlay to make content more readable */
+    /* Optional soft overlay for readability */
     body::before {
       content: '';
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(255, 255, 255, 0.5); /* Light overlay */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.3); /* light overlay */
       z-index: -1;
     }
 
     h1 {
       color: #00bb99;
+      text-shadow: 1px 1px 2px #fff;
     }
 
     .question, .score, .timer, .result {
       font-size: 1.5rem;
       margin: 10px;
+      text-shadow: 1px 1px 2px #fff;
     }
 
     .options {
@@ -49,13 +52,14 @@
     }
 
     .option {
-      background-color: #333;
-      color: white;
+      background-color: rgba(0, 0, 0, 0.6); /* semi-transparent */
+      color: #fff;
       padding: 10px 20px;
       border: 2px solid #00ffcc;
       border-radius: 8px;
       cursor: pointer;
       font-size: 1.2rem;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     .option:hover {
@@ -67,7 +71,7 @@
       font-size: 1rem;
       padding: 6px 10px;
       margin: 10px;
-      background-color: #00ffcc;
+      background-color: rgba(0, 255, 204, 0.8);
       border: none;
       border-radius: 5px;
       cursor: pointer;
