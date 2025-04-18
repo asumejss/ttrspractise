@@ -5,7 +5,7 @@
   <title>ttrspractise - Times Tables Trainer</title>
   <style>
     body {
-      background-image: url('Allison-Saeng-Sdi23EZaUJ0-unsplash.jpg');
+      background-image: url('Allison-Saeng-Sdi23EZaUJ0-unsplash.jpg'); /* Your math-themed background image */
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center center;
@@ -33,7 +33,7 @@
       margin: 20px 0;
     }
     .option {
-      background-color: rgba(0, 0, 0, 0.6);
+      background-color: rgba(0, 0, 0, 0.6); /* semi-transparent so the background shows through */
       color: white;
       padding: 10px 20px;
       border: 2px solid #00ffcc;
@@ -80,23 +80,12 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
-  <!-- Sound files -->
-  <audio id="correctSound" src="correct.mp3"></audio>
-  <audio id="incorrectSound" src="incorrect.mp3"></audio>
-  <audio id="gameOverSound" src="gameover.mp3"></audio>
-
   <script>
-    // Exclude 1, 2, and 5
-    const tables = [3, 4, 6, 7, 8, 9, 10, 11, 12].filter(t => ![1, 2, 5].includes(t));
-
+    const tables = [3, 4, 6, 7, 8, 9, 11, 12];
     let score = 0;
     let incorrect = 0;
     let timeLeft = 0;
     let timerInterval;
-
-    const correctSound = document.getElementById('correctSound');
-    const incorrectSound = document.getElementById('incorrectSound');
-    const gameOverSound = document.getElementById('gameOverSound');
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random() * tables.length)];
@@ -129,10 +118,8 @@
         btn.onclick = () => {
           if (opt === q.answer) {
             score++;
-            correctSound.play();
           } else {
             incorrect++;
-            incorrectSound.play();
           }
           document.getElementById("score").textContent = "Score: " + score;
           displayQuestion();
@@ -182,7 +169,6 @@
       const resultDiv = document.getElementById("result");
       resultDiv.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       resultDiv.classList.remove("hidden");
-      gameOverSound.play();
     }
   </script>
 </body>
