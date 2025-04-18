@@ -18,15 +18,16 @@
     h1 {
       color: #00ffcc;
     }
-    .question {
-      font-size: 2rem;
-      margin: 20px;
+    .question, .score, .timer, .result {
+      font-size: 1.5rem;
+      margin: 10px;
     }
     .options {
       display: flex;
       flex-wrap: wrap;
       gap: 15px;
       justify-content: center;
+      margin: 20px 0;
     }
     .option {
       background-color: #333;
@@ -41,21 +42,47 @@
       background-color: #00ffcc;
       color: #000;
     }
-    .score {
-      margin-top: 20px;
-      font-size: 1.2rem;
+    select, button {
+      font-size: 1rem;
+      padding: 6px 10px;
+      margin: 10px;
+      background-color: #00ffcc;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>ttrspractise</h1>
-  <div class="question" id="question">Loading...</div>
-  <div class="options" id="options"></div>
-  <div class="score" id="score">Score: 0</div>
+
+  <div>
+    <label for="timeSelect">Select time:</label>
+    <select id="timeSelect">
+      <option value="1">1 minute</option>
+      <option value="2">2 minutes</option>
+      <option value="3">3 minutes</option>
+      <option value="4">4 minutes</option>
+      <option value="5">5 minutes</option>
+    </select>
+    <button onclick="startGame()">Play</button>
+  </div>
+
+  <div class="timer" id="timer">Time: 0:00</div>
+  <div class="question hidden" id="question">Loading...</div>
+  <div class="options hidden" id="options"></div>
+  <div class="score hidden" id="score">Score: 0</div>
+  <div class="result hidden" id="result"></div>
 
   <script>
     const tables = [3, 4, 6, 7, 8, 9, 11, 12];
     let score = 0;
+    let incorrect = 0;
+    let timeLeft = 0;
+    let timerInterval;
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random() * tables.length)];
@@ -89,7 +116,7 @@
           if (opt === q.answer) {
             score++;
           } else {
-            score = Math.max(score - 1, 0);
+            incorrect++;
           }
           document.getElementById("score").textContent = "Score: " + score;
           displayQuestion();
@@ -98,7 +125,48 @@
       });
     }
 
-    displayQuestion();
+    function startTimer(duration) {
+      timeLeft = duration;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const min = Math.floor(timeLeft / 60);
+      const sec = timeLeft % 60;
+      document.getElementById("timer").textContent = `Time: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function startGame() {
+      score = 0;
+      incorrect = 0;
+      document.getElementById("score").textContent = "Score: 0";
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("question").classList.remove("hidden");
+      document.getElementById("options").classList.remove("hidden");
+      document.getElementById("score").classList.remove("hidden");
+
+      const selectedMinutes = parseInt(document.getElementById("timeSelect").value);
+      const totalSeconds = selectedMinutes * 60;
+      startTimer(totalSeconds);
+      displayQuestion();
+    }
+
+    function endGame() {
+      clearInterval(timerInterval);
+      document.getElementById("question").classList.add("hidden");
+      document.getElementById("options").classList.add("hidden");
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
+      resultDiv.classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
