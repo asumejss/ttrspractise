@@ -1,86 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ttrspractise - Times Tables Trainer</title>
-  <style>
-    body {
-      background-image: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpg');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      color: #00ffcc;
-    }
-    .question, .score, .timer, .result {
-      font-size: 1.5rem;
-      margin: 10px;
-    }
-    .options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-      margin: 20px 0;
-    }
-    .option {
-      background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent background */
-      color: white;
-      padding: 10px 20px;
-      border: 2px solid #00ffcc;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
-    .option:hover {
-      background-color: #00ffcc;
-      color: #000;
-    }
-    select, button {
-      font-size: 1rem;
-      padding: 6px 10px;
-      margin: 10px;
-      background-color: #00ffcc;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <h1>ttrspractise</h1>
-
-  <div>
-    <label for="timeSelect">Select time:</label>
-    <select id="timeSelect">
-      <option value="1">1 minute</option>
-      <option value="2">2 minutes</option>
-      <option value="3">3 minutes</option>
-      <option value="4">4 minutes</option>
-      <option value="5">5 minutes</option>
-    </select>
-    <button onclick="startGame()">Play</button>
-  </div>
-
-  <div class="timer" id="timer">Time: 0:00</div>
   <div class="question hidden" id="question">Loading...</div>
   <div class="options hidden" id="options"></div>
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
   <script>
+    const correctSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
+    const wrongSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
+    const startSound = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
+    const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
+
     const tables = [3, 4, 6, 7, 8, 9, 11, 12];
     let score = 0;
     let incorrect = 0;
@@ -117,8 +45,10 @@
         btn.textContent = opt;
         btn.onclick = () => {
           if (opt === q.answer) {
+            correctSound.play();
             score++;
           } else {
+            wrongSound.play();
             incorrect++;
           }
           document.getElementById("score").textContent = "Score: " + score;
@@ -147,6 +77,7 @@
     }
 
     function startGame() {
+      startSound.play();
       score = 0;
       incorrect = 0;
       document.getElementById("score").textContent = "Score: 0";
@@ -163,6 +94,7 @@
 
     function endGame() {
       clearInterval(timerInterval);
+      gameoverSound.play();
       document.getElementById("question").classList.add("hidden");
       document.getElementById("options").classList.add("hidden");
 
