@@ -80,27 +80,27 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
-  <!-- Sound Effects -->
-  <audio id="correctSound" src="correct.mp3" preload="auto"></audio>
-  <audio id="incorrectSound" src="incorrect.mp3" preload="auto"></audio>
-  <audio id="gameoverSound" src="gameover.mp3" preload="auto"></audio>
+  <!-- Sound files -->
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="incorrectSound" src="incorrect.mp3"></audio>
+  <audio id="gameOverSound" src="gameover.mp3"></audio>
 
   <script>
-    const tables = [3, 4, 6, 7, 8, 9, 11, 12]; // Exclude 1, 2, and 5
-    const validMultipliers = [3, 4, 6, 7, 8, 9, 10, 11, 12]; // Exclude 1, 2, and 5 as multipliers
+    // Exclude 1, 2, and 5
+    const tables = [3, 4, 6, 7, 8, 9, 10, 11, 12].filter(t => ![1, 2, 5].includes(t));
 
     let score = 0;
     let incorrect = 0;
     let timeLeft = 0;
     let timerInterval;
 
-    const correctSound = document.getElementById("correctSound");
-    const incorrectSound = document.getElementById("incorrectSound");
-    const gameoverSound = document.getElementById("gameoverSound");
+    const correctSound = document.getElementById('correctSound');
+    const incorrectSound = document.getElementById('incorrectSound');
+    const gameOverSound = document.getElementById('gameOverSound');
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random() * tables.length)];
-      const b = validMultipliers[Math.floor(Math.random() * validMultipliers.length)];
+      const b = Math.floor(Math.random() * 12) + 1;
       const answer = a * b;
       return { a, b, answer };
     }
@@ -108,8 +108,7 @@
     function generateOptions(correct) {
       const options = new Set([correct]);
       while (options.size < 4) {
-        const option = correct + Math.floor(Math.random() * 20 - 10);
-        if (option > 0) options.add(option);
+        options.add(correct + Math.floor(Math.random() * 20 - 10));
       }
       return Array.from(options).sort(() => Math.random() - 0.5);
     }
@@ -180,11 +179,10 @@
       document.getElementById("question").classList.add("hidden");
       document.getElementById("options").classList.add("hidden");
 
-      gameoverSound.play();
-
       const resultDiv = document.getElementById("result");
       resultDiv.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       resultDiv.classList.remove("hidden");
+      gameOverSound.play();
     }
   </script>
 </body>
