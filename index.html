@@ -1,60 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>ttrspractise - Times Tables Trainer</title>
   <style>
     body {
-      margin: 0;
-      height: 100vh;
+      background-image: url('Allison-Saeng-Sdi23EZaUJ0-unsplash.jpg');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpg') no-repeat center/cover;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-shadow: 1px 1px 2px #000;
+      height: 100vh;
+      margin: 0;
     }
-    h1 { color: #00ffcc; margin-bottom: 20px; }
-    .timer, .question, .score, .result {
-      background: rgba(0,0,0,0.6);
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin: 5px 0;
-      font-size: 1.4rem;
+    h1 {
+      color: #00ffcc;
+    }
+    .question, .score, .timer, .result {
+      font-size: 1.5rem;
+      margin: 10px;
     }
     .options {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 15px;
       justify-content: center;
-      margin: 15px 0;
+      margin: 20px 0;
     }
     .option {
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 10px 16px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px 20px;
       border: 2px solid #00ffcc;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
     }
-    .option:hover { background: #00ffcc; color: #000; }
+    .option:hover {
+      background-color: #00ffcc;
+      color: #000;
+    }
     select, button {
       font-size: 1rem;
       padding: 6px 10px;
       margin: 10px;
-      background: #00ffcc;
+      background-color: #00ffcc;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    .hidden { display: none; }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-
   <h1>ttrspractise</h1>
 
   <div>
@@ -66,103 +71,121 @@
       <option value="4">4 minutes</option>
       <option value="5">5 minutes</option>
     </select>
-    <button id="playBtn">Play</button>
+    <button onclick="startGame()">Play</button>
   </div>
 
   <div class="timer" id="timer">Time: 0:00</div>
-  <div class="question hidden" id="question">Question?</div>
+  <div class="question hidden" id="question">Loading...</div>
   <div class="options hidden" id="options"></div>
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
+  <!-- Sound Effects -->
+  <audio id="correctSound" src="correct.mp3" preload="auto"></audio>
+  <audio id="incorrectSound" src="incorrect.mp3" preload="auto"></audio>
+  <audio id="gameoverSound" src="gameover.mp3" preload="auto"></audio>
+
   <script>
-    // Preload sounds via JavaScript Audio objects
-    const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
-    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
-    const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
-    const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
-    [startSound, correctSound, wrongSound, gameoverSound].forEach(s => s.preload = 'auto');
+    const tables = [3, 4, 6, 7, 8, 9, 11, 12]; // Exclude 1, 2, and 5
+    const validMultipliers = [3, 4, 6, 7, 8, 9, 10, 11, 12]; // Exclude 1, 2, and 5 as multipliers
 
-    const tables = [3,4,6,7,8,9,11,12];
-    let score=0, incorrect=0, timeLeft=0, timerInterval;
+    let score = 0;
+    let incorrect = 0;
+    let timeLeft = 0;
+    let timerInterval;
 
-    const questionEl = document.getElementById('question');
-    const optionsEl  = document.getElementById('options');
-    const scoreEl    = document.getElementById('score');
-    const timerEl    = document.getElementById('timer');
-    const resultEl   = document.getElementById('result');
-    const playBtn    = document.getElementById('playBtn');
+    const correctSound = document.getElementById("correctSound");
+    const incorrectSound = document.getElementById("incorrectSound");
+    const gameoverSound = document.getElementById("gameoverSound");
 
     function getRandomQuestion() {
-      const a = tables[Math.floor(Math.random()*tables.length)];
-      const b = Math.floor(Math.random()*12)+1;
-      return {a, b, answer: a*b};
+      const a = tables[Math.floor(Math.random() * tables.length)];
+      const b = validMultipliers[Math.floor(Math.random() * validMultipliers.length)];
+      const answer = a * b;
+      return { a, b, answer };
     }
 
     function generateOptions(correct) {
-      const set = new Set([correct]);
-      while (set.size < 4) set.add(correct + Math.floor(Math.random()*20-10));
-      return Array.from(set).sort(() => 0.5 - Math.random());
+      const options = new Set([correct]);
+      while (options.size < 4) {
+        const option = correct + Math.floor(Math.random() * 20 - 10);
+        if (option > 0) options.add(option);
+      }
+      return Array.from(options).sort(() => Math.random() - 0.5);
     }
 
     function displayQuestion() {
-      const {a,b,answer} = getRandomQuestion();
-      questionEl.textContent = `${a} × ${b} = ?`;
-      optionsEl.innerHTML = '';
-      generateOptions(answer).forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'option';
+      const q = getRandomQuestion();
+      const questionDiv = document.getElementById("question");
+      const optionsDiv = document.getElementById("options");
+
+      questionDiv.textContent = `${q.a} × ${q.b} = ?`;
+      optionsDiv.innerHTML = "";
+
+      const options = generateOptions(q.answer);
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option";
         btn.textContent = opt;
         btn.onclick = () => {
-          if (opt === answer) {
+          if (opt === q.answer) {
             score++;
             correctSound.play();
           } else {
             incorrect++;
-            wrongSound.play();
+            incorrectSound.play();
           }
-          scoreEl.textContent = `Score: ${score}`;
+          document.getElementById("score").textContent = "Score: " + score;
           displayQuestion();
         };
-        optionsEl.appendChild(btn);
+        optionsDiv.appendChild(btn);
       });
     }
 
-    function updateTimer() {
-      const m = Math.floor(timeLeft/60), s = timeLeft%60;
-      timerEl.textContent = `Time: ${m}:${s.toString().padStart(2,'0')}`;
-    }
-
-    function startTimer(sec) {
-      timeLeft = sec; updateTimer();
+    function startTimer(duration) {
+      timeLeft = duration;
+      updateTimerDisplay();
       timerInterval = setInterval(() => {
         timeLeft--;
-        updateTimer();
-        if (timeLeft <= 0) endGame();
-      },1000);
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const min = Math.floor(timeLeft / 60);
+      const sec = timeLeft % 60;
+      document.getElementById("timer").textContent = `Time: ${min}:${sec.toString().padStart(2, '0')}`;
     }
 
     function startGame() {
-      startSound.play();
-      score = 0; incorrect = 0;
-      scoreEl.textContent = `Score: ${score}`;
-      ['question','options','score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-      resultEl.classList.add('hidden');
+      score = 0;
+      incorrect = 0;
+      document.getElementById("score").textContent = "Score: 0";
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("question").classList.remove("hidden");
+      document.getElementById("options").classList.remove("hidden");
+      document.getElementById("score").classList.remove("hidden");
 
-      const mins = parseInt(document.getElementById('timeSelect').value, 10);
-      startTimer(mins*60);
+      const selectedMinutes = parseInt(document.getElementById("timeSelect").value);
+      const totalSeconds = selectedMinutes * 60;
+      startTimer(totalSeconds);
       displayQuestion();
     }
 
     function endGame() {
       clearInterval(timerInterval);
-      gameoverSound.play();
-      ['question','options'].forEach(id => document.getElementById(id).classList.add('hidden'));
-      resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
-      resultEl.classList.remove('hidden');
-    }
+      document.getElementById("question").classList.add("hidden");
+      document.getElementById("options").classList.add("hidden");
 
-    playBtn.addEventListener('click', startGame);
+      gameoverSound.play();
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
+      resultDiv.classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
