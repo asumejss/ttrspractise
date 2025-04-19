@@ -51,17 +51,6 @@
       cursor: pointer;
     }
     .hidden { display: none; }
-
-    .test-sounds {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-    }
-
-    .test-sounds button {
-      font-size: 0.9rem;
-      padding: 5px 10px;
-    }
   </style>
 </head>
 <body>
@@ -86,19 +75,16 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
-  <!-- Test Sounds Section -->
-  <div class="test-sounds">
-    <button onclick="correctSound.play()">Test Correct</button>
-    <button onclick="wrongSound.play()">Test Wrong</button>
-    <button onclick="gameoverSound.play()">Test Game Over</button>
-  </div>
-
   <script>
     const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
     const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
     const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
     const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
-    [startSound, correctSound, wrongSound, gameoverSound].forEach(s => s.preload = 'auto');
+
+    [startSound, correctSound, wrongSound, gameoverSound].forEach(s => {
+      s.preload = 'auto';
+      s.load();
+    });
 
     const tables = [3,4,6,7,8,9,11,12];
     let score=0, incorrect=0, timeLeft=0, timerInterval;
@@ -133,10 +119,10 @@
         btn.onclick = () => {
           if (opt === answer) {
             score++;
-            correctSound.play();
+            correctSound.play().catch(() => {});
           } else {
             incorrect++;
-            wrongSound.play();
+            wrongSound.play().catch(() => {});
           }
           scoreEl.textContent = `Score: ${score}`;
           displayQuestion();
@@ -160,7 +146,7 @@
     }
 
     function startGame() {
-      startSound.play();
+      startSound.play().catch(() => {});
       score = 0; incorrect = 0;
       scoreEl.textContent = `Score: ${score}`;
       ['question','options','score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
@@ -173,7 +159,7 @@
 
     function endGame() {
       clearInterval(timerInterval);
-      gameoverSound.play();
+      gameoverSound.play().catch(() => {});
       ['question','options'].forEach(id => document.getElementById(id).classList.add('hidden'));
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       resultEl.classList.remove('hidden');
