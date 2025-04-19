@@ -51,23 +51,36 @@
       cursor: pointer;
     }
     .hidden { display: none; }
+
     .feedback {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 5rem; /* Bigger check and X */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      font-size: 6rem;
       font-weight: bold;
       display: none;
-      animation: feedbackAnimation 0.7s forwards;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-    .correct { color: green; }
-    .incorrect { color: red; }
 
-    /* Add animation for feedback visibility */
-    @keyframes feedbackAnimation {
-      0% { opacity: 1; }
-      100% { opacity: 0; display: none; }
+    .feedback.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .feedback.correct {
+      background-color: rgba(0, 255, 0, 0.8);
+      color: white;
+    }
+
+    .feedback.incorrect {
+      background-color: rgba(255, 0, 0, 0.8);
+      color: white;
     }
   </style>
 </head>
@@ -92,31 +105,31 @@
   <div class="options hidden" id="options"></div>
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
-
-  <!-- Feedback area for correct/incorrect answers -->
   <div id="feedback" class="feedback"></div>
 
   <script>
     const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
-    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_3400cc5358.mp3?filename=success-1-6297.mp3');
+    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
     const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
-    const gameoverSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav');
+    const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
 
     [startSound, correctSound, wrongSound, gameoverSound].forEach(s => {
       s.preload = 'auto';
       s.load();
+      s.volume = 1.0;
     });
 
     const tables = [3,4,6,7,8,9,11,12];
-    let score=0, incorrect=0, timeLeft=0, timerInterval, timerPaused=false;
+    let score=0, incorrect=0, timeLeft=0, timerInterval;
+    let timerPaused = false;
 
     const questionEl = document.getElementById('question');
     const optionsEl  = document.getElementById('options');
     const scoreEl    = document.getElementById('score');
     const timerEl    = document.getElementById('timer');
     const resultEl   = document.getElementById('result');
-    const feedbackEl = document.getElementById('feedback');
     const playBtn    = document.getElementById('playBtn');
+    const feedbackEl = document.getElementById('feedback');
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random()*tables.length)];
@@ -130,6 +143,27 @@
       return Array.from(set).sort(() => 0.5 - Math.random());
     }
 
+    function showFeedback(correct) {
+      feedbackEl.textContent = correct ? "✔️" : "❌";
+      feedbackEl.className = `feedback show ${correct ? 'correct' : 'incorrect'}`;
+      feedbackEl.style.display = 'flex';
+      timerPaused = true;
+
+      setTimeout(() => {
+        feedbackEl.classList.remove('show');
+        feedbackEl.style.display = 'none';
+        timerPaused = false;
+      }, 700);
+    }
+
+    function playCorrectSound() {
+      const sound = correctSound.cloneNode();
+      sound.volume = 1.0;
+      sound.play().catch((e) => {
+        console.warn("Correct sound failed:", e);
+      });
+    }
+
     function displayQuestion() {
       const {a,b,answer} = getRandomQuestion();
       questionEl.textContent = `${a} × ${b} = ?`;
@@ -141,17 +175,11 @@
         btn.onclick = () => {
           if (opt === answer) {
             score++;
-            correctSound.currentTime = 0;  // Reset sound position
-            correctSound.play().catch(() => {
-              console.log("Failed to play correct sound.");
-            });
+            playCorrectSound();
             showFeedback(true);
           } else {
             incorrect++;
-            wrongSound.currentTime = 0;  // Reset sound position
-            wrongSound.play().catch(() => {
-              console.log("Failed to play wrong sound.");
-            });
+            wrongSound.play().catch(() => {});
             showFeedback(false);
           }
           scoreEl.textContent = `Score: ${score}`;
@@ -162,6 +190,7 @@
     }
 
     function updateTimer() {
+      if (timerPaused) return;
       const m = Math.floor(timeLeft/60), s = timeLeft%60;
       timerEl.textContent = `Time: ${m}:${s.toString().padStart(2,'0')}`;
     }
@@ -175,18 +204,6 @@
           if (timeLeft <= 0) endGame();
         }
       },1000);
-    }
-
-    function showFeedback(correct) {
-      feedbackEl.textContent = correct ? "✔️" : "❌";
-      feedbackEl.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
-      feedbackEl.style.display = 'block';
-
-      timerPaused = true;
-      setTimeout(() => {
-        feedbackEl.style.display = 'none';
-        timerPaused = false;
-      }, 700); // Hide feedback after 0.7 seconds
     }
 
     function startGame() {
@@ -209,11 +226,7 @@
       resultEl.classList.remove('hidden');
     }
 
-    // Ensure sound works by prompting the user
-    playBtn.addEventListener('click', () => {
-      startSound.play();
-      startGame();
-    });
+    playBtn.addEventListener('click', startGame);
   </script>
 </body>
 </html>
