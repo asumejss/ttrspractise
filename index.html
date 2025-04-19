@@ -15,6 +15,7 @@
       color: #fff;
       font-family: Arial, sans-serif;
       text-shadow: 1px 1px 2px #000;
+      overflow: hidden;
     }
     h1 { color: #00ffcc; margin-bottom: 20px; }
     .timer, .question, .score, .result {
@@ -52,35 +53,28 @@
     }
     .hidden { display: none; }
 
-    .feedback {
+    #feedbackScreen {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      font-size: 6rem;
-      font-weight: bold;
-      display: none;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      font-size: 100px;
+      color: white;
+      font-weight: bold;
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s ease-in-out;
     }
 
-    .feedback.show {
-      display: flex;
-      opacity: 1;
+    #feedbackScreen.correct {
+      background-color: rgba(0, 200, 0, 0.85);
     }
 
-    .feedback.correct {
-      background-color: rgba(0, 255, 0, 0.8);
-      color: white;
-    }
-
-    .feedback.incorrect {
-      background-color: rgba(255, 0, 0, 0.8);
-      color: white;
+    #feedbackScreen.wrong {
+      background-color: rgba(255, 0, 0, 0.85);
     }
   </style>
 </head>
@@ -105,23 +99,23 @@
   <div class="options hidden" id="options"></div>
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
-  <div id="feedback" class="feedback"></div>
+
+  <div id="feedbackScreen"></div>
 
   <script>
     const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
-    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
+    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2023/03/27/audio_33c44438de.mp3?filename=correct-3-198110.mp3');
     const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
     const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
 
     [startSound, correctSound, wrongSound, gameoverSound].forEach(s => {
       s.preload = 'auto';
       s.load();
-      s.volume = 1.0;
     });
 
     const tables = [3,4,6,7,8,9,11,12];
     let score=0, incorrect=0, timeLeft=0, timerInterval;
-    let timerPaused = false;
+    let paused = false;
 
     const questionEl = document.getElementById('question');
     const optionsEl  = document.getElementById('options');
@@ -129,7 +123,7 @@
     const timerEl    = document.getElementById('timer');
     const resultEl   = document.getElementById('result');
     const playBtn    = document.getElementById('playBtn');
-    const feedbackEl = document.getElementById('feedback');
+    const feedback   = document.getElementById('feedbackScreen');
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random()*tables.length)];
@@ -143,25 +137,20 @@
       return Array.from(set).sort(() => 0.5 - Math.random());
     }
 
-    function showFeedback(correct) {
-      feedbackEl.textContent = correct ? "✔️" : "❌";
-      feedbackEl.className = `feedback show ${correct ? 'correct' : 'incorrect'}`;
-      feedbackEl.style.display = 'flex';
-      timerPaused = true;
-
+    function showFeedback(type) {
+      clearInterval(timerInterval);
+      paused = true;
+      feedback.className = type;
+      feedback.innerHTML = type === 'correct' ? '✔' : '✖';
+      feedback.style.opacity = '1';
       setTimeout(() => {
-        feedbackEl.classList.remove('show');
-        feedbackEl.style.display = 'none';
-        timerPaused = false;
+        feedback.style.opacity = '0';
+        if (timeLeft > 0) {
+          startTimer(timeLeft); // resume timer
+        }
+        displayQuestion();
+        paused = false;
       }, 700);
-    }
-
-    function playCorrectSound() {
-      const sound = correctSound.cloneNode();
-      sound.volume = 1.0;
-      sound.play().catch((e) => {
-        console.warn("Correct sound failed:", e);
-      });
     }
 
     function displayQuestion() {
@@ -173,24 +162,24 @@
         btn.className = 'option';
         btn.textContent = opt;
         btn.onclick = () => {
+          if (paused) return;
           if (opt === answer) {
             score++;
-            playCorrectSound();
-            showFeedback(true);
+            scoreEl.textContent = `Score: ${score}`;
+            correctSound.cloneNode().play().catch(() => {});
+            showFeedback('correct');
           } else {
             incorrect++;
-            wrongSound.play().catch(() => {});
-            showFeedback(false);
+            scoreEl.textContent = `Score: ${score}`;
+            wrongSound.cloneNode().play().catch(() => {});
+            showFeedback('wrong');
           }
-          scoreEl.textContent = `Score: ${score}`;
-          displayQuestion();
         };
         optionsEl.appendChild(btn);
       });
     }
 
     function updateTimer() {
-      if (timerPaused) return;
       const m = Math.floor(timeLeft/60), s = timeLeft%60;
       timerEl.textContent = `Time: ${m}:${s.toString().padStart(2,'0')}`;
     }
@@ -198,21 +187,20 @@
     function startTimer(sec) {
       timeLeft = sec; updateTimer();
       timerInterval = setInterval(() => {
-        if (!timerPaused) {
-          timeLeft--;
-          updateTimer();
-          if (timeLeft <= 0) endGame();
-        }
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) endGame();
       },1000);
     }
 
     function startGame() {
       startSound.play().catch(() => {});
+      correctSound.play().catch(() => {}); // unlock correct
+      wrongSound.play().catch(() => {});   // unlock wrong
       score = 0; incorrect = 0;
       scoreEl.textContent = `Score: ${score}`;
       ['question','options','score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
       resultEl.classList.add('hidden');
-
       const mins = parseInt(document.getElementById('timeSelect').value, 10);
       startTimer(mins*60);
       displayQuestion();
