@@ -1,225 +1,233 @@
+<!-- Save this as index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Times Tables Trainer</title>
+  <title>Times Tables Trainer + Avatar System</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <style>
     body {
       margin: 0;
-      min-height: 100vh;
-      background: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpg') no-repeat center/cover;
-      color: #fff;
       font-family: Arial, sans-serif;
-      text-shadow: 1px 1px 2px #000;
-      overflow-x: hidden;
-    }
-    h1 { color: #00ffcc; text-align: center; }
-    .timer, .question, .score, .result, .coins {
-      background: rgba(0,0,0,0.6);
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin: 5px auto;
-      font-size: 1.4rem;
+      background: #000;
+      color: white;
       text-align: center;
-      width: fit-content;
+      background: url('https://images.unsplash.com/photo-1600607684881-6c2ad8e1fa3d') center/cover no-repeat;
     }
-    .options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-      margin: 15px;
-    }
-    .option {
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 10px 16px;
-      border: 2px solid #00ffcc;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1.1rem;
-    }
-    .option:hover { background: #00ffcc; color: #000; }
-    select, button {
-      font-size: 1rem;
-      padding: 6px 10px;
-      margin: 10px 5px;
-      background: #00ffcc;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .hidden { display: none; }
 
-    #avatar {
-      width: 120px;
-      height: 120px;
-      background-color: rgba(255,255,255,0.2);
+    h1 { color: #00ffcc; }
+    button { margin: 5px; padding: 10px; background: #00ffcc; border: none; border-radius: 5px; cursor: pointer; }
+
+    #avatarCanvas {
+      width: 200px;
+      height: 200px;
       margin: 10px auto;
-      border-radius: 50%;
+      background: #333;
+      border: 3px solid #00ffcc;
       position: relative;
     }
-    .accessory {
+
+    .accessory-img {
       position: absolute;
       width: 100%;
       height: 100%;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: contain;
+      object-fit: contain;
+      pointer-events: none;
     }
 
-    #shop {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 15px;
-      border-radius: 10px;
-      margin: 15px auto;
-      width: 80%;
-      max-width: 400px;
+    #shopItems img {
+      width: 100px;
+      margin: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
     }
-    .shopItem {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      background: rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 6px;
-    }
+
+    #shopItems img.owned { border-color: #00ffcc; }
+    #shopItems img.equipped { border-color: gold; }
+
+    #miniGameBtn { margin-top: 20px; background: #ffcc00; }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>ttrspractise</h1>
-  <div id="authSection">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="signUp()">Sign Up</button>
-    <button onclick="signIn()">Log In</button>
-    <button onclick="signOut()" id="signOutBtn" class="hidden">Log Out</button>
-    <div id="userInfo"></div>
-  </div>
 
-  <div id="avatar">
-    <div id="accessory"></div>
-  </div>
-  <div class="coins" id="coinDisplay">Coins: 0</div>
+<h1>Times Tables Trainer</h1>
 
-  <div>
-    <label for="timeSelect">Select time:</label>
-    <select id="timeSelect">
-      <option value="1">1 minute</option>
-      <option value="2">2 minutes</option>
-      <option value="3">3 minutes</option>
-      <option value="4">4 minutes</option>
-      <option value="5">5 minutes</option>
-    </select>
-    <button id="playBtn">Play</button>
-    <button id="checkScoreBtn">Check My Rank</button>
-  </div>
+<!-- Auth -->
+<div>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="signUp()">Sign Up</button>
+  <button onclick="signIn()">Log In</button>
+  <button onclick="signOut()" id="signOutBtn" class="hidden">Log Out</button>
+  <div id="userInfo"></div>
+</div>
 
-  <div class="timer" id="timer">Time: 0:00</div>
-  <div class="question hidden" id="question">Question?</div>
-  <div class="options hidden" id="options"></div>
-  <div class="score hidden" id="score">Score: 0</div>
-  <div class="result hidden" id="result"></div>
+<!-- Avatar -->
+<h2>Your Avatar</h2>
+<div id="avatarCanvas">
+  <img id="baseAvatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Hero" class="accessory-img" />
+</div>
+<p id="coinDisplay">Coins: 0</p>
 
-  <div id="shop">
-    <h3>Shop</h3>
-    <div id="shopItems"></div>
-  </div>
+<!-- Shop -->
+<h2>Shop</h2>
+<div id="shopItems"></div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
-      authDomain: "timestablestrainer-3ccf8.firebaseapp.com",
-      projectId: "timestablestrainer-3ccf8",
-      storageBucket: "timestablestrainer-3ccf8.appspot.com",
-      messagingSenderId: "129355540273",
-      appId: "1:129355540273:web:be917252eb94bfa938b210",
-      measurementId: "G-8RWC8J46ZB"
-    };
+<!-- Mini-Game -->
+<button id="miniGameBtn" onclick="playMiniGame()">Mini-Game (Coming Soon)</button>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
+    authDomain: "timestablestrainer-3ccf8.firebaseapp.com",
+    projectId: "timestablestrainer-3ccf8",
+    storageBucket: "timestablestrainer-3ccf8.appspot.com",
+    messagingSenderId: "129355540273",
+    appId: "1:129355540273:web:be917252eb94bfa938b210"
+  };
 
-    function signUp() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, password).catch(err => alert(err.message));
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+  const avatarCanvas = document.getElementById('avatarCanvas');
+  const shopItemsEl = document.getElementById('shopItems');
+  const coinDisplay = document.getElementById('coinDisplay');
+
+  const accessories = [
+    { id: "glasses", name: "Cool Glasses", src: "https://i.imgur.com/1X5VdQH.png", price: 30 },
+    { id: "hat", name: "Wizard Hat", src: "https://i.imgur.com/vgVVyYM.png", price: 50 },
+    { id: "crown", name: "Gold Crown", src: "https://i.imgur.com/GYkS4f7.png", price: 100 }
+  ];
+
+  async function signUp() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    await auth.createUserWithEmailAndPassword(email, password);
+  }
+
+  async function signIn() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    await auth.signInWithEmailAndPassword(email, password);
+  }
+
+  async function signOut() {
+    await auth.signOut();
+  }
+
+  auth.onAuthStateChanged(async user => {
+    const userInfo = document.getElementById("userInfo");
+    const signOutBtn = document.getElementById("signOutBtn");
+
+    if (user) {
+      currentUser = user;
+      userInfo.textContent = `Logged in as: ${user.email}`;
+      signOutBtn.classList.remove("hidden");
+      await loadUserData();
+    } else {
+      currentUser = null;
+      userInfo.textContent = "";
+      signOutBtn.classList.add("hidden");
     }
+  });
 
-    function signIn() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+  async function loadUserData() {
+    if (!currentUser) return;
+
+    const ref = db.collection("users").doc(currentUser.uid);
+    const doc = await ref.get();
+    if (!doc.exists) {
+      await ref.set({ coins: 0, owned: [], equipped: [] });
     }
+    const data = (await ref.get()).data();
+    renderCoins(data.coins);
+    renderAccessories(data);
+  }
 
-    function signOut() {
-      auth.signOut();
-    }
+  function renderCoins(amount) {
+    coinDisplay.textContent = `Coins: ${amount}`;
+  }
 
-    auth.onAuthStateChanged(user => {
-      const userInfo = document.getElementById("userInfo");
-      const signOutBtn = document.getElementById("signOutBtn");
-      if (user) {
-        userInfo.textContent = `Logged in as: ${user.email}`;
-        signOutBtn.classList.remove("hidden");
-      } else {
-        userInfo.textContent = "";
-        signOutBtn.classList.add("hidden");
+  async function renderAccessories(data) {
+    avatarCanvas.querySelectorAll(".accessory-img:not(#baseAvatar)").forEach(el => el.remove());
+
+    data.equipped.forEach(itemId => {
+      const item = accessories.find(i => i.id === itemId);
+      if (item) {
+        const img = document.createElement("img");
+        img.src = item.src;
+        img.className = "accessory-img";
+        avatarCanvas.appendChild(img);
       }
     });
 
-    let score = 0, coins = 0;
-    const coinDisplay = document.getElementById("coinDisplay");
+    shopItemsEl.innerHTML = "";
+    accessories.forEach(item => {
+      const img = document.createElement("img");
+      img.src = item.src;
 
-    function updateCoins(amount) {
-      coins += amount;
-      localStorage.setItem("ttrCoins", coins);
-      coinDisplay.textContent = `Coins: ${coins}`;
-    }
+      if (data.owned.includes(item.id)) img.classList.add("owned");
+      if (data.equipped.includes(item.id)) img.classList.add("equipped");
 
-    function loadCoins() {
-      coins = parseInt(localStorage.getItem("ttrCoins")) || 0;
-      coinDisplay.textContent = `Coins: ${coins}`;
-    }
+      img.title = `${item.name} - ${item.price} coins`;
+      img.onclick = () => handleAccessoryClick(item, data);
+      shopItemsEl.appendChild(img);
+    });
+  }
 
-    function displayShop() {
-      const accessories = [
-        { name: "Cool Glasses", cost: 50, img: "https://images.unsplash.com/photo-1592798228520-0c61ff75d8c2" },
-        { name: "Wizard Hat", cost: 70, img: "https://images.unsplash.com/photo-1565058528608-688a8a6ad896" },
-        { name: "Party Hat", cost: 30, img: "https://images.unsplash.com/photo-1602810312333-1d97514b6313" }
-      ];
+  async function handleAccessoryClick(item, data) {
+    const ref = db.collection("users").doc(currentUser.uid);
 
-      const shopItems = document.getElementById("shopItems");
-      shopItems.innerHTML = "";
-      accessories.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "shopItem";
-        div.innerHTML = `<span>${item.name} - ${item.cost} coins</span><button>Buy</button>`;
-        div.querySelector("button").onclick = () => {
-          if (coins >= item.cost) {
-            updateCoins(-item.cost);
-            document.getElementById("accessory").style.backgroundImage = `url('${item.img}')`;
-            localStorage.setItem("accessory", item.img);
-          } else {
-            alert("Not enough coins!");
-          }
-        };
-        shopItems.appendChild(div);
-      });
-    }
-
-    function loadAccessory() {
-      const img = localStorage.getItem("accessory");
-      if (img) {
-        document.getElementById("accessory").style.backgroundImage = `url('${img}')`;
+    // Purchase
+    if (!data.owned.includes(item.id)) {
+      if (data.coins >= item.price) {
+        data.coins -= item.price;
+        data.owned.push(item.id);
+        await ref.update({ coins: data.coins, owned: data.owned });
+        await loadUserData();
+      } else {
+        alert("Not enough coins!");
       }
+      return;
     }
 
-    loadCoins();
-    loadAccessory();
-    displayShop();
-  </script>
+    // Equip/Unequip
+    const isEquipped = data.equipped.includes(item.id);
+    if (isEquipped) {
+      data.equipped = data.equipped.filter(id => id !== item.id);
+    } else {
+      data.equipped.push(item.id);
+    }
+    await ref.update({ equipped: data.equipped });
+    await loadUserData();
+  }
+
+  // Call this when a correct answer is given
+  async function earnCoins(amount) {
+    if (!currentUser) return;
+    const ref = db.collection("users").doc(currentUser.uid);
+    const doc = await ref.get();
+    const data = doc.data();
+    await ref.update({ coins: data.coins + amount });
+    await loadUserData();
+  }
+
+  // Example Mini-game handler
+  function playMiniGame() {
+    alert("Mini-game coming soon!");
+  }
+
+  // TEMP: Simulate correct answer (earn coins)
+  setInterval(() => {
+    if (currentUser) earnCoins(10);
+  }, 15000); // Earn 10 coins every 15s for demo
+
+</script>
 </body>
 </html>
