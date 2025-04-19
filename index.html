@@ -1,21 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Times Tables Trainer</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       background: #222;
       color: white;
-      font-family: Arial;
       text-align: center;
       padding: 20px;
     }
     .hidden { display: none; }
-    button, input {
+    #question, #options, #score, #timer {
+      margin: 20px 0;
+      font-size: 1.5rem;
+    }
+    #options button {
       padding: 10px;
-      margin: 5px;
-      font-size: 1rem;
+      margin: 10px;
+      font-size: 1.2rem;
+    }
+    #gameOverScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: red;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      font-weight: bold;
+      z-index: 1000;
     }
   </style>
 </head>
@@ -23,145 +40,132 @@
 
   <h1>Times Tables Trainer</h1>
 
-  <!-- Auth Section -->
+  <!-- Authentication Section -->
   <div id="authSection">
-    <input type="email" id="email" placeholder="Email" /><br>
-    <input type="password" id="password" placeholder="Password" /><br>
-    <button id="signupBtn">Sign Up</button>
-    <button id="loginBtn">Log In</button>
+    <input type="text" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <br />
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
-  <!-- Game Section -->
-  <div id="gameSection" class="hidden">
-    <div id="welcomeUser"></div>
-    <div id="question">Press Start</div>
-    <div id="options"></div>
-    <div id="score">Score: 0</div>
-    <button id="startBtn">Start Game</button>
-    <button id="logoutBtn">Log Out</button>
+  <!-- Game Controls -->
+  <div id="gameControls" class="hidden">
+    <label for="timeSelect">Select Time:</label>
+    <select id="timeSelect">
+      <option value="1">1 Minute</option>
+      <option value="2">2 Minutes</option>
+      <option value="3">3 Minutes</option>
+      <option value="4">4 Minutes</option>
+      <option value="5">5 Minutes</option>
+    </select>
+    <button onclick="startGame()">Play</button>
+    <button onclick="showStats()">My Stats</button>
   </div>
 
-  <!-- Firebase Scripts -->
+  <!-- Game Display -->
+  <div id="timer"></div>
+  <div id="question"></div>
+  <div id="options"></div>
+  <div id="score"></div>
+
+  <div id="result"></div>
+  <div id="gameOverScreen">Game Over</div>
+  <div id="userStats" class="hidden"></div>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- Firebase Config -->
   <script>
+    // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
-      authDomain: "timestablestrainer-3ccf8.firebaseapp.com",
-      projectId: "timestablestrainer-3ccf8",
-      storageBucket: "timestablestrainer-3ccf8.firebasestorage.app",
-      messagingSenderId: "129355540273",
-      appId: "1:129355540273:web:be917252eb94bfa938b210",
-      measurementId: "G-8RWC8J46ZB"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-  </script>
 
-  <!-- Game Logic -->
-  <script>
-    const authSection = document.getElementById('authSection');
-    const gameSection = document.getElementById('gameSection');
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const signupBtn = document.getElementById('signupBtn');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const welcomeUser = document.getElementById('welcomeUser');
+    let user = null;
 
-    let currentUser = null;
+    auth.onAuthStateChanged((u) => {
+      user = u;
+      document.getElementById("gameControls").classList.toggle("hidden", !user);
+    });
 
-    signupBtn.onclick = () => {
-      auth.createUserWithEmailAndPassword(email.value, password.value)
-        .then(user => alert("Signed up!"))
+    function signUp() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Signed Up"))
         .catch(err => alert(err.message));
-    };
+    }
 
-    loginBtn.onclick = () => {
-      auth.signInWithEmailAndPassword(email.value, password.value)
-        .then(user => {
-          currentUser = user.user;
-          showGame();
-        })
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => alert("Logged In"))
         .catch(err => alert(err.message));
-    };
+    }
 
-    logoutBtn.onclick = () => {
-      auth.signOut().then(() => {
-        currentUser = null;
-        gameSection.classList.add('hidden');
-        authSection.classList.remove('hidden');
-      });
-    };
-
-    function showGame() {
-      authSection.classList.add('hidden');
-      gameSection.classList.remove('hidden');
-      welcomeUser.textContent = `Welcome, ${currentUser.email}`;
+    function logout() {
+      auth.signOut();
     }
 
     // Game Logic
-    const startBtn = document.getElementById('startBtn');
-    const question = document.getElementById('question');
-    const options = document.getElementById('options');
-    const scoreEl = document.getElementById('score');
+    const tables = [3, 4, 6, 7, 8, 9, 11, 12];
+    let score = 0, totalQuestions = 0, timeLeft = 0, timerInterval, startTime;
 
-    let score = 0;
-    let currentAnswer = 0;
-
-    function generateQuestion() {
-      const a = Math.floor(Math.random() * 12) + 1;
+    function getRandomQuestion() {
+      const a = tables[Math.floor(Math.random() * tables.length)];
       const b = Math.floor(Math.random() * 12) + 1;
-      currentAnswer = a * b;
-      question.textContent = `${a} × ${b} = ?`;
-
-      options.innerHTML = '';
-      const correctIndex = Math.floor(Math.random() * 4);
-      for (let i = 0; i < 4; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i === correctIndex ? currentAnswer : (currentAnswer + Math.floor(Math.random() * 10 + 1));
-        btn.onclick = () => checkAnswer(parseInt(btn.textContent));
-        options.appendChild(btn);
-      }
+      return { a, b, answer: a * b };
     }
 
-    function checkAnswer(value) {
-      if (value === currentAnswer) {
-        score++;
-        scoreEl.textContent = `Score: ${score}`;
-        generateQuestion();
-      } else {
-        endGame();
-      }
-    }
-
-    function endGame() {
-      question.textContent = "Game Over!";
-      options.innerHTML = '';
-      db.collection("scores").doc(currentUser.uid).set({
-        email: currentUser.email,
-        score: score,
-        timestamp: Date.now()
-      });
-    }
-
-    startBtn.onclick = () => {
+    function startGame() {
       score = 0;
-      scoreEl.textContent = `Score: 0`;
-      generateQuestion();
-    };
+      totalQuestions = 0;
+      document.getElementById("score").textContent = "Score: 0";
+      const minutes = parseInt(document.getElementById("timeSelect").value);
+      timeLeft = minutes * 60;
+      startTime = Date.now();
+      document.getElementById("gameOverScreen").style.display = "none";
+      displayQuestion();
+      updateTimer();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        showGame();
-      }
-    });
-  </script>
-</body>
-</html>
+    function updateTimer() {
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      document.getElementById("timer").textContent = `Time: ${m}:${s.toString().padStart(2, "0")}`;
+    }
+
+    function displayQuestion() {
+      const q = getRandomQuestion();
+      document.getElementById("question").textContent = `${q.a} × ${q.b} = ?`;
+      const opts = generateOptions(q.answer);
+      const optsEl = document.getElementById("options");
+      optsEl.innerHTML = "";
+      opts.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => {
+          totalQuestions++;
+          if (opt === q.answer) {
+            score++;
+            document.getElementBy 
