@@ -51,6 +51,17 @@
       cursor: pointer;
     }
     .hidden { display: none; }
+
+    .test-sounds {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .test-sounds button {
+      font-size: 0.9rem;
+      padding: 5px 10px;
+    }
   </style>
 </head>
 <body>
@@ -67,7 +78,6 @@
       <option value="5">5 minutes</option>
     </select>
     <button id="playBtn">Play</button>
-    <button id="testSoundsBtn">Test Sounds</button>
   </div>
 
   <div class="timer" id="timer">Time: 0:00</div>
@@ -76,43 +86,46 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
+  <!-- Test Sounds Section -->
+  <div class="test-sounds">
+    <button onclick="correctSound.play()">Test Correct</button>
+    <button onclick="wrongSound.play()">Test Wrong</button>
+    <button onclick="gameoverSound.play()">Test Game Over</button>
+  </div>
+
   <script>
-    const startSound = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
-    const correctSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
-    const wrongSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
+    const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
+    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
+    const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
     const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
+    [startSound, correctSound, wrongSound, gameoverSound].forEach(s => s.preload = 'auto');
 
-    let score = 0, incorrect = 0, timeLeft = 0, timerInterval;
-
-    const tables = [3, 4, 6, 7, 8, 9, 11, 12];
+    const tables = [3,4,6,7,8,9,11,12];
+    let score=0, incorrect=0, timeLeft=0, timerInterval;
 
     const questionEl = document.getElementById('question');
-    const optionsEl = document.getElementById('options');
-    const scoreEl = document.getElementById('score');
-    const timerEl = document.getElementById('timer');
-    const resultEl = document.getElementById('result');
-    const playBtn = document.getElementById('playBtn');
-    const testBtn = document.getElementById('testSoundsBtn');
+    const optionsEl  = document.getElementById('options');
+    const scoreEl    = document.getElementById('score');
+    const timerEl    = document.getElementById('timer');
+    const resultEl   = document.getElementById('result');
+    const playBtn    = document.getElementById('playBtn');
 
     function getRandomQuestion() {
-      const a = tables[Math.floor(Math.random() * tables.length)];
-      const b = Math.floor(Math.random() * 12) + 1;
-      return { a, b, answer: a * b };
+      const a = tables[Math.floor(Math.random()*tables.length)];
+      const b = Math.floor(Math.random()*12)+1;
+      return {a, b, answer: a*b};
     }
 
     function generateOptions(correct) {
-      const options = new Set([correct]);
-      while (options.size < 4) {
-        options.add(correct + Math.floor(Math.random() * 20 - 10));
-      }
-      return Array.from(options).sort(() => Math.random() - 0.5);
+      const set = new Set([correct]);
+      while (set.size < 4) set.add(correct + Math.floor(Math.random()*20-10));
+      return Array.from(set).sort(() => 0.5 - Math.random());
     }
 
     function displayQuestion() {
-      const { a, b, answer } = getRandomQuestion();
+      const {a,b,answer} = getRandomQuestion();
       questionEl.textContent = `${a} × ${b} = ?`;
       optionsEl.innerHTML = '';
-
       generateOptions(answer).forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option';
@@ -120,11 +133,9 @@
         btn.onclick = () => {
           if (opt === answer) {
             score++;
-            correctSound.currentTime = 0;
             correctSound.play();
           } else {
             incorrect++;
-            wrongSound.currentTime = 0;
             wrongSound.play();
           }
           scoreEl.textContent = `Score: ${score}`;
@@ -135,62 +146,40 @@
     }
 
     function updateTimer() {
-      const mins = Math.floor(timeLeft / 60);
-      const secs = timeLeft % 60;
-      timerEl.textContent = `Time: ${mins}:${secs.toString().padStart(2, '0')}`;
+      const m = Math.floor(timeLeft/60), s = timeLeft%60;
+      timerEl.textContent = `Time: ${m}:${s.toString().padStart(2,'0')}`;
     }
 
-    function startTimer(seconds) {
-      timeLeft = seconds;
-      updateTimer();
+    function startTimer(sec) {
+      timeLeft = sec; updateTimer();
       timerInterval = setInterval(() => {
         timeLeft--;
         updateTimer();
-        if (timeLeft <= 0) {
-          endGame();
-        }
-      }, 1000);
+        if (timeLeft <= 0) endGame();
+      },1000);
     }
 
     function startGame() {
-      score = 0;
-      incorrect = 0;
+      startSound.play();
+      score = 0; incorrect = 0;
       scoreEl.textContent = `Score: ${score}`;
-      ['question', 'options', 'score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+      ['question','options','score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
       resultEl.classList.add('hidden');
 
       const mins = parseInt(document.getElementById('timeSelect').value, 10);
-      startTimer(mins * 60);
-
-      setTimeout(() => {
-        startSound.currentTime = 0;
-        startSound.play();
-      }, 100); // delay ensures browsers don't block the sound
-
+      startTimer(mins*60);
       displayQuestion();
     }
 
     function endGame() {
       clearInterval(timerInterval);
-      gameoverSound.currentTime = 0;
       gameoverSound.play();
-      ['question', 'options'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      ['question','options'].forEach(id => document.getElementById(id).classList.add('hidden'));
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       resultEl.classList.remove('hidden');
     }
 
     playBtn.addEventListener('click', startGame);
-
-    testBtn.addEventListener('click', () => {
-      startSound.currentTime = 0;
-      correctSound.currentTime = 0;
-      wrongSound.currentTime = 0;
-      gameoverSound.currentTime = 0;
-      startSound.play();
-      setTimeout(() => correctSound.play(), 1000);
-      setTimeout(() => wrongSound.play(), 2000);
-      setTimeout(() => gameoverSound.play(), 3000);
-    });
   </script>
 </body>
 </html>
