@@ -221,6 +221,11 @@
       resultEl.classList.remove('hidden');
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       gameOverScreen.style.display = 'flex';
+
+      // Hide the game over screen after 1.5 seconds
+      setTimeout(() => {
+        gameOverScreen.style.display = 'none';
+      }, 1500);
     }
 
     playBtn.addEventListener('click', startGame);
