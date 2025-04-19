@@ -51,6 +51,17 @@
       cursor: pointer;
     }
     .hidden { display: none; }
+    .feedback {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      font-weight: bold;
+      display: none;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
   </style>
 </head>
 <body>
@@ -75,6 +86,9 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
+  <!-- Feedback area for correct/incorrect answers -->
+  <div id="feedback" class="feedback"></div>
+
   <script>
     const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
     const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_3400cc5358.mp3?filename=success-1-6297.mp3');
@@ -87,13 +101,14 @@
     });
 
     const tables = [3,4,6,7,8,9,11,12];
-    let score=0, incorrect=0, timeLeft=0, timerInterval;
+    let score=0, incorrect=0, timeLeft=0, timerInterval, timerPaused=false;
 
     const questionEl = document.getElementById('question');
     const optionsEl  = document.getElementById('options');
     const scoreEl    = document.getElementById('score');
     const timerEl    = document.getElementById('timer');
     const resultEl   = document.getElementById('result');
+    const feedbackEl = document.getElementById('feedback');
     const playBtn    = document.getElementById('playBtn');
 
     function getRandomQuestion() {
@@ -123,12 +138,14 @@
             correctSound.play().catch(() => {
               console.log("Failed to play correct sound.");
             });
+            showFeedback(true);
           } else {
             incorrect++;
-            wrongSound.currentTime = 0;  // Reset wrong sound position
+            wrongSound.currentTime = 0;  // Reset sound position
             wrongSound.play().catch(() => {
               console.log("Failed to play wrong sound.");
             });
+            showFeedback(false);
           }
           scoreEl.textContent = `Score: ${score}`;
           displayQuestion();
@@ -145,10 +162,24 @@
     function startTimer(sec) {
       timeLeft = sec; updateTimer();
       timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimer();
-        if (timeLeft <= 0) endGame();
+        if (!timerPaused) {
+          timeLeft--;
+          updateTimer();
+          if (timeLeft <= 0) endGame();
+        }
       },1000);
+    }
+
+    function showFeedback(correct) {
+      feedbackEl.textContent = correct ? "✔️" : "❌";
+      feedbackEl.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
+      feedbackEl.style.display = 'block';
+
+      timerPaused = true;
+      setTimeout(() => {
+        feedbackEl.style.display = 'none';
+        timerPaused = false;
+      }, 700); // Hide feedback after 0.7 seconds
     }
 
     function startGame() {
