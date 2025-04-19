@@ -3,34 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <title>Times Tables Trainer</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <style>
     body {
       margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      min-height: 100vh;
       background: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpg') no-repeat center/cover;
       color: #fff;
       font-family: Arial, sans-serif;
       text-shadow: 1px 1px 2px #000;
-      overflow: auto;
+      overflow-x: hidden;
     }
-    h1 { color: #00ffcc; margin-bottom: 20px; }
+    h1 { color: #00ffcc; text-align: center; }
     .timer, .question, .score, .result {
       background: rgba(0,0,0,0.6);
       padding: 8px 12px;
       border-radius: 6px;
-      margin: 5px 0;
+      margin: 5px auto;
       font-size: 1.4rem;
+      text-align: center;
+      width: fit-content;
     }
     .options {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       justify-content: center;
-      margin: 15px 0;
+      margin: 15px;
     }
     .option {
       background: rgba(0,0,0,0.6);
@@ -45,7 +45,7 @@
     select, button {
       font-size: 1rem;
       padding: 6px 10px;
-      margin: 10px;
+      margin: 10px 5px;
       background: #00ffcc;
       border: none;
       border-radius: 5px;
@@ -91,8 +91,6 @@
       font-size: 4rem;
       font-weight: bold;
     }
-    .black { color: black; }
-    .blue  { color: blue; }
 
     #savedStats {
       margin-top: 20px;
@@ -100,7 +98,7 @@
     }
 
     #rankChart {
-      margin-top: 20px;
+      margin: 20px auto;
       width: 250px;
       height: 300px;
       display: flex;
@@ -111,6 +109,7 @@
       padding: 10px;
       position: relative;
     }
+
     .rankBar {
       flex: 1;
       width: 100%;
@@ -120,11 +119,12 @@
       color: black;
       font-weight: bold;
     }
-    .MathHero     { background: #00ff00; }  /* Green */
-    .MathLegend   { background: #00ccff; }  /* Sky blue */
-    .MathStar     { background: #ffff00; }  /* Yellow */
-    .GettingIt    { background: #ff9900; }  /* Orange */
-    .Starter      { background: #ff0000; }  /* Red */
+
+    .MathHero     { background: #00ff00; }
+    .MathLegend   { background: #00ccff; }
+    .MathStar     { background: #ffff00; }
+    .GettingIt    { background: #ff9900; }
+    .Starter      { background: #ff0000; }
 
     #indicator {
       position: absolute;
@@ -134,11 +134,25 @@
       background: white;
       z-index: 2;
     }
+
+    #authSection {
+      text-align: center;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
 
   <h1>ttrspractise</h1>
+
+  <div id="authSection">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="signIn()">Log In</button>
+    <button onclick="signOut()" id="signOutBtn" class="hidden">Log Out</button>
+    <div id="userInfo"></div>
+  </div>
 
   <div>
     <label for="timeSelect">Select time:</label>
@@ -164,49 +178,75 @@
   </div>
 
   <div id="savedStats" class="hidden"></div>
-
   <div id="rankChart" class="hidden">
     <div class="rankBar MathHero">Math Hero (&lt; 2s)</div>
-    <div class="rankBar MathLegend">Math Legend (2-3s)</div>
-    <div class="rankBar MathStar">Math Star (3-4s)</div>
-    <div class="rankBar GettingIt">Getting It (4-5s)</div>
+    <div class="rankBar MathLegend">Math Legend (2–3s)</div>
+    <div class="rankBar MathStar">Math Star (3–4s)</div>
+    <div class="rankBar GettingIt">Getting It (4–5s)</div>
     <div class="rankBar Starter">Starter (5s+)</div>
     <div id="indicator"></div>
   </div>
 
-  <!-- Firebase config and initialization -->
-  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
       authDomain: "timestablestrainer-3ccf8.firebaseapp.com",
       projectId: "timestablestrainer-3ccf8",
-      storageBucket: "timestablestrainer-3ccf8.firebasestorage.app",
+      storageBucket: "timestablestrainer-3ccf8.appspot.com",
       messagingSenderId: "129355540273",
       appId: "1:129355540273:web:be917252eb94bfa938b210",
       measurementId: "G-8RWC8J46ZB"
     };
-    const app = firebase.initializeApp(firebaseConfig);
+
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    function signUp() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .catch(err => alert(err.message));
+    }
+
+    function signIn() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(err => alert(err.message));
+    }
+
+    function signOut() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(user => {
+      const userInfo = document.getElementById("userInfo");
+      const signOutBtn = document.getElementById("signOutBtn");
+      if (user) {
+        userInfo.textContent = `Logged in as: ${user.email}`;
+        signOutBtn.classList.remove("hidden");
+      } else {
+        userInfo.textContent = "";
+        signOutBtn.classList.add("hidden");
+      }
+    });
+
+    const tables = [3, 4, 6, 7, 8, 9, 11, 12];
     let score = 0, incorrect = 0, timeLeft = 0, timerInterval, paused = false;
     let totalQuestions = 0, startTime = 0;
 
     const questionEl = document.getElementById('question');
-    const optionsEl  = document.getElementById('options');
-    const scoreEl    = document.getElementById('score');
-    const timerEl    = document.getElementById('timer');
-    const resultEl   = document.getElementById('result');
-    const playBtn    = document.getElementById('playBtn');
-    const feedback   = document.getElementById('feedbackScreen');
+    const optionsEl = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const resultEl = document.getElementById('result');
+    const feedback = document.getElementById('feedbackScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
     const savedStats = document.getElementById('savedStats');
     const rankChart = document.getElementById('rankChart');
     const indicator = document.getElementById('indicator');
 
     function getRandomQuestion() {
-      const tables = [3, 4, 6, 7, 8, 9, 11, 12];
       const a = tables[Math.floor(Math.random() * tables.length)];
       const b = Math.floor(Math.random() * 12) + 1;
       return { a, b, answer: a * b };
@@ -233,7 +273,7 @@
         if (timeLeft > 0) startTimer(timeLeft);
         displayQuestion();
         paused = false;
-      }, 100); // Reduced from 0.7s to 0.1s
+      }, 100);
     }
 
     function displayQuestion() {
@@ -297,6 +337,10 @@
       resultEl.classList.remove('hidden');
       gameOverScreen.style.display = 'flex';
 
+      setTimeout(() => {
+        gameOverScreen.style.display = 'none';
+      }, 1500);
+
       const totalTimeTaken = (Date.now() - startTime) / 1000;
       const avgTime = totalTimeTaken / totalQuestions;
 
@@ -314,13 +358,9 @@
       }));
 
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}<br>Avg Time/Question: ${avgTime.toFixed(2)}s<br>Rank: ${rank}`;
-
-      setTimeout(() => {
-        gameOverScreen.style.display = 'none'; // Hide game over screen after 1.5s
-      }, 1500);
     }
 
-    playBtn.addEventListener('click', startGame);
+    document.getElementById("playBtn").addEventListener('click', startGame);
 
     document.getElementById("checkScoreBtn").addEventListener("click", () => {
       const saved = JSON.parse(localStorage.getItem("ttrScore"));
@@ -337,4 +377,15 @@
         Rank: ${saved.rank}
       `;
       savedStats.classList.remove("hidden");
-     
+      rankChart.classList.remove("hidden");
+
+      const avg = parseFloat(saved.avgTime);
+      const chartHeight = rankChart.clientHeight;
+      const max = 6;
+      const y = Math.min(Math.max(avg, 1), max);
+      const percent = (y - 1) / (max - 1);
+      indicator.style.top = `${percent * chartHeight}px`;
+    });
+  </script>
+</body>
+</html>
