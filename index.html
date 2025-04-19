@@ -190,9 +190,15 @@
     }
 
     function startGame() {
-      // Unlock audio on iOS/iPadOS
-      [startSound, correctSound, wrongSound, gameoverSound].forEach(s => {
-        s.play().then(() => s.pause()).catch(() => {});
+      // Unlock audio on iPad/iOS
+      const unlock = [startSound, correctSound, wrongSound, gameoverSound];
+      unlock.forEach(sound => {
+        sound.muted = true;
+        sound.play().then(() => {
+          sound.pause();
+          sound.currentTime = 0;
+          sound.muted = false;
+        }).catch(() => {});
       });
 
       startSound.play().catch(() => {});
