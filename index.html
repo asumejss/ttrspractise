@@ -116,6 +116,10 @@
     const playBtn    = document.getElementById('playBtn');
     const feedbackEl = document.getElementById('feedbackScreen');
 
+    // Unlock sound on first interaction
+    const unlockSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3');
+    unlockSound.play().catch(() => {});
+
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random() * tables.length)];
       const b = Math.floor(Math.random() * 12) + 1;
@@ -189,19 +193,8 @@
       }, 1000);
     }
 
-    function unlockSounds() {
-      allSounds.forEach(sound => {
-        sound.muted = true;
-        sound.play().then(() => {
-          sound.pause();
-          sound.currentTime = 0;
-          sound.muted = false;
-        }).catch(() => {});
-      });
-    }
-
     function startGame() {
-      unlockSounds(); // Unlock sound playback on iOS
+      unlockSound.play().catch(() => {}); // Unlock sound immediately
       startSound.play().catch(() => {});
       score = 0;
       incorrect = 0;
