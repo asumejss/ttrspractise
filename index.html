@@ -1,88 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <title>Times Tables Trainer</title>
   <style>
-    /* Keep your existing styles... */
-
     body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      background: url('allison-saeng-Sdi23EZaUJ0-unsplash.jpg') no-repeat center/cover;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-shadow: 1px 1px 2px #000;
-      overflow-x: hidden;
+      background: #222;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
     }
-
-    h1 { color: #00ffcc; margin: 10px 0; }
-
-    input, button {
-      padding: 8px;
+    .hidden { display: none; }
+    button, input {
+      padding: 10px;
       margin: 5px;
       font-size: 1rem;
-      border-radius: 5px;
-      border: none;
     }
-
-    #authSection {
-      margin-top: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .hidden { display: none; }
   </style>
 </head>
 <body>
 
   <h1>Times Tables Trainer</h1>
 
-  <!-- Login / Signup Section -->
+  <!-- Auth Section -->
   <div id="authSection">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="signup()">Sign Up</button>
-    <button onclick="login()">Login</button>
-    <button onclick="logout()" id="logoutBtn" class="hidden">Logout</button>
-    <div id="userStatus"></div>
+    <input type="email" id="email" placeholder="Email" /><br>
+    <input type="password" id="password" placeholder="Password" /><br>
+    <button id="signupBtn">Sign Up</button>
+    <button id="loginBtn">Log In</button>
   </div>
 
-  <!-- Game interface -->
-  <div>
-    <label for="timeSelect">Select time:</label>
-    <select id="timeSelect">
-      <option value="1">1 minute</option>
-      <option value="2">2 minutes</option>
-      <option value="3">3 minutes</option>
-    </select>
-    <button id="playBtn">Play</button>
-    <button id="checkScoreBtn">Check My Rank</button>
+  <!-- Game Section -->
+  <div id="gameSection" class="hidden">
+    <div id="welcomeUser"></div>
+    <div id="question">Press Start</div>
+    <div id="options"></div>
+    <div id="score">Score: 0</div>
+    <button id="startBtn">Start Game</button>
+    <button id="logoutBtn">Log Out</button>
   </div>
 
-  <div class="timer" id="timer">Time: 0:00</div>
-  <div class="question hidden" id="question">Question?</div>
-  <div class="options hidden" id="options"></div>
-  <div class="score hidden" id="score">Score: 0</div>
-  <div class="result hidden" id="result"></div>
-  <div id="feedbackScreen"></div>
-  <div id="gameOverScreen">
-    <div><span class="black">GAME</span> <span class="blue">OVER</span></div>
-  </div>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <div id="savedStats" class="hidden"></div>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
+  <!-- Firebase Config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
@@ -97,170 +61,105 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+  </script>
 
-    const userStatus = document.getElementById("userStatus");
-    const logoutBtn = document.getElementById("logoutBtn");
+  <!-- Game Logic -->
+  <script>
+    const authSection = document.getElementById('authSection');
+    const gameSection = document.getElementById('gameSection');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const signupBtn = document.getElementById('signupBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const welcomeUser = document.getElementById('welcomeUser');
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        userStatus.textContent = `Logged in as ${user.email}`;
-        logoutBtn.classList.remove("hidden");
-      } else {
-        userStatus.textContent = "Not logged in.";
-        logoutBtn.classList.add("hidden");
-      }
-    });
+    let currentUser = null;
 
-    function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Signed up successfully!"))
-        .catch(e => alert(e.message));
+    signupBtn.onclick = () => {
+      auth.createUserWithEmailAndPassword(email.value, password.value)
+        .then(user => alert("Signed up!"))
+        .catch(err => alert(err.message));
+    };
+
+    loginBtn.onclick = () => {
+      auth.signInWithEmailAndPassword(email.value, password.value)
+        .then(user => {
+          currentUser = user.user;
+          showGame();
+        })
+        .catch(err => alert(err.message));
+    };
+
+    logoutBtn.onclick = () => {
+      auth.signOut().then(() => {
+        currentUser = null;
+        gameSection.classList.add('hidden');
+        authSection.classList.remove('hidden');
+      });
+    };
+
+    function showGame() {
+      authSection.classList.add('hidden');
+      gameSection.classList.remove('hidden');
+      welcomeUser.textContent = `Welcome, ${currentUser.email}`;
     }
 
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(e => alert(e.message));
-    }
+    // Game Logic
+    const startBtn = document.getElementById('startBtn');
+    const question = document.getElementById('question');
+    const options = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
 
-    function logout() {
-      auth.signOut();
-    }
+    let score = 0;
+    let currentAnswer = 0;
 
-    // Game logic (same as before, with save/load from Firebase on login/logout)...
-    let score = 0, incorrect = 0, timeLeft = 0, timerInterval, paused = false;
-    let totalQuestions = 0, startTime = 0;
-
-    function getRandomQuestion() {
-      const tables = [3, 4, 6, 7, 8, 9, 11, 12];
-      const a = tables[Math.floor(Math.random() * tables.length)];
+    function generateQuestion() {
+      const a = Math.floor(Math.random() * 12) + 1;
       const b = Math.floor(Math.random() * 12) + 1;
-      return { a, b, answer: a * b };
-    }
+      currentAnswer = a * b;
+      question.textContent = `${a} × ${b} = ?`;
 
-    function generateOptions(correct) {
-      const set = new Set([correct]);
-      while (set.size < 4) {
-        const fake = correct + Math.floor(Math.random() * 21) - 10;
-        if (fake > 0) set.add(fake);
+      options.innerHTML = '';
+      const correctIndex = Math.floor(Math.random() * 4);
+      for (let i = 0; i < 4; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i === correctIndex ? currentAnswer : (currentAnswer + Math.floor(Math.random() * 10 + 1));
+        btn.onclick = () => checkAnswer(parseInt(btn.textContent));
+        options.appendChild(btn);
       }
-      return Array.from(set).sort(() => 0.5 - Math.random());
     }
 
-    function showFeedback(type) {
-      paused = true;
-      clearInterval(timerInterval);
-      const feedback = document.getElementById("feedbackScreen");
-      feedback.className = type;
-      feedback.textContent = type === 'correct' ? '✔' : '✖';
-      feedback.style.opacity = '1';
-
-      setTimeout(() => {
-        feedback.style.opacity = '0';
-        if (timeLeft > 0) startTimer(timeLeft);
-        displayQuestion();
-        paused = false;
-      }, 700);
+    function checkAnswer(value) {
+      if (value === currentAnswer) {
+        score++;
+        scoreEl.textContent = `Score: ${score}`;
+        generateQuestion();
+      } else {
+        endGame();
+      }
     }
 
-    function displayQuestion() {
-      totalQuestions++;
-      const { a, b, answer } = getRandomQuestion();
-      document.getElementById("question").textContent = `${a} × ${b} = ?`;
-      const optionsEl = document.getElementById("options");
-      optionsEl.innerHTML = '';
-      generateOptions(answer).forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "option";
-        btn.textContent = opt;
-        btn.onclick = () => {
-          if (paused) return;
-          if (opt === answer) {
-            score++;
-            document.getElementById("score").textContent = `Score: ${score}`;
-            showFeedback("correct");
-          } else {
-            incorrect++;
-            document.getElementById("score").textContent = `Score: ${score}`;
-            showFeedback("wrong");
-          }
-        };
-        optionsEl.appendChild(btn);
+    function endGame() {
+      question.textContent = "Game Over!";
+      options.innerHTML = '';
+      db.collection("scores").doc(currentUser.uid).set({
+        email: currentUser.email,
+        score: score,
+        timestamp: Date.now()
       });
     }
 
-    function updateTimer() {
-      const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-      document.getElementById("timer").textContent = `Time: ${m}:${s.toString().padStart(2, '0')}`;
-    }
+    startBtn.onclick = () => {
+      score = 0;
+      scoreEl.textContent = `Score: 0`;
+      generateQuestion();
+    };
 
-    function startTimer(sec) {
-      timeLeft = sec;
-      updateTimer();
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimer();
-        if (timeLeft <= 0) endGame();
-      }, 1000);
-    }
-
-    function startGame() {
-      score = 0; incorrect = 0; totalQuestions = 0;
-      startTime = Date.now();
-      document.getElementById("gameOverScreen").style.display = "none";
-      ["question", "options", "score"].forEach(id => document.getElementById(id).classList.remove("hidden"));
-      document.getElementById("result").classList.add("hidden");
-      const mins = parseInt(document.getElementById("timeSelect").value, 10);
-      startTimer(mins * 60);
-      displayQuestion();
-    }
-
-    async function endGame() {
-      clearInterval(timerInterval);
-      ["question", "options"].forEach(id => document.getElementById(id).classList.add("hidden"));
-      document.getElementById("result").classList.remove("hidden");
-      document.getElementById("gameOverScreen").style.display = "flex";
-
-      const totalTimeTaken = (Date.now() - startTime) / 1000;
-      const avgTime = totalTimeTaken / totalQuestions;
-      let rank = "Starter";
-      if (avgTime < 5) rank = "Getting It";
-      if (avgTime < 4) rank = "Math Star";
-      if (avgTime < 3) rank = "Math Legend";
-      if (avgTime < 2 && avgTime >= 1) rank = "Math Hero";
-
-      const resultEl = document.getElementById("result");
-      resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}<br>Avg Time/Question: ${avgTime.toFixed(2)}s<br>Rank: ${rank}`;
-
-      if (auth.currentUser) {
-        const uid = auth.currentUser.uid;
-        await db.collection("users").doc(uid).set({
-          score, incorrect, avgTime: avgTime.toFixed(2), rank
-        });
-      }
-    }
-
-    document.getElementById("playBtn").addEventListener("click", startGame);
-
-    document.getElementById("checkScoreBtn").addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) return alert("Log in first!");
-      const doc = await db.collection("users").doc(user.uid).get();
-      if (doc.exists) {
-        const saved = doc.data();
-        document.getElementById("savedStats").innerHTML = `
-          Score: ${saved.score}<br>
-          Incorrect: ${saved.incorrect}<br>
-          Avg Time/Question: ${saved.avgTime}<br>
-          Rank: ${saved.rank}
-        `;
-        document.getElementById("savedStats").classList.remove("hidden");
-      } else {
-        alert("No saved data found.");
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        showGame();
       }
     });
   </script>
