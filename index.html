@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ttrspractise - Times Tables Trainer</title>
+  <title>Times Tables Trainer</title>
   <style>
     body {
       margin: 0;
@@ -56,23 +56,22 @@
     #feedbackScreen {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 100px;
+      font-size: 140px;
       color: white;
       font-weight: bold;
       opacity: 0;
+      pointer-events: none;
       transition: opacity 0.2s ease-in-out;
     }
-
     #feedbackScreen.correct {
       background-color: rgba(0, 200, 0, 0.85);
     }
-
     #feedbackScreen.wrong {
       background-color: rgba(255, 0, 0, 0.85);
     }
@@ -99,62 +98,60 @@
   <div class="options hidden" id="options"></div>
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
-
   <div id="feedbackScreen"></div>
 
   <script>
-    const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
-    const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2023/03/27/audio_33c44438de.mp3?filename=correct-3-198110.mp3');
-    const wrongSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3?filename=error-126627.mp3');
-    const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3?filename=game-over-arcade-6435.mp3');
+    const startSound = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3');
+    const correctSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_29f7b4b6d8.mp3'); // different correct sound
+    const wrongSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_41fc1c19c7.mp3');
+    const gameoverSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/09/audio_e28597c883.mp3');
 
-    [startSound, correctSound, wrongSound, gameoverSound].forEach(s => {
-      s.preload = 'auto';
-      s.load();
-    });
+    const allSounds = [startSound, correctSound, wrongSound, gameoverSound];
+    allSounds.forEach(s => { s.preload = 'auto'; });
 
-    const tables = [3,4,6,7,8,9,11,12];
-    let score=0, incorrect=0, timeLeft=0, timerInterval;
-    let paused = false;
+    let score = 0, incorrect = 0, timeLeft = 0, timerInterval, paused = false;
 
+    const tables = [3, 4, 6, 7, 8, 9, 11, 12];
     const questionEl = document.getElementById('question');
-    const optionsEl  = document.getElementById('options');
-    const scoreEl    = document.getElementById('score');
-    const timerEl    = document.getElementById('timer');
-    const resultEl   = document.getElementById('result');
-    const playBtn    = document.getElementById('playBtn');
-    const feedback   = document.getElementById('feedbackScreen');
+    const optionsEl = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const resultEl = document.getElementById('result');
+    const playBtn = document.getElementById('playBtn');
+    const feedback = document.getElementById('feedbackScreen');
 
     function getRandomQuestion() {
-      const a = tables[Math.floor(Math.random()*tables.length)];
-      const b = Math.floor(Math.random()*12)+1;
-      return {a, b, answer: a*b};
+      const a = tables[Math.floor(Math.random() * tables.length)];
+      const b = Math.floor(Math.random() * 12) + 1;
+      return { a, b, answer: a * b };
     }
 
     function generateOptions(correct) {
       const set = new Set([correct]);
-      while (set.size < 4) set.add(correct + Math.floor(Math.random()*20-10));
+      while (set.size < 4) {
+        const fake = correct + Math.floor(Math.random() * 21) - 10;
+        if (fake > 0) set.add(fake);
+      }
       return Array.from(set).sort(() => 0.5 - Math.random());
     }
 
     function showFeedback(type) {
-      clearInterval(timerInterval);
       paused = true;
+      clearInterval(timerInterval);
       feedback.className = type;
-      feedback.innerHTML = type === 'correct' ? '✔' : '✖';
+      feedback.textContent = type === 'correct' ? '✔' : '✖';
       feedback.style.opacity = '1';
+
       setTimeout(() => {
         feedback.style.opacity = '0';
-        if (timeLeft > 0) {
-          startTimer(timeLeft); // resume timer
-        }
+        if (timeLeft > 0) startTimer(timeLeft);
         displayQuestion();
         paused = false;
       }, 700);
     }
 
     function displayQuestion() {
-      const {a,b,answer} = getRandomQuestion();
+      const { a, b, answer } = getRandomQuestion();
       questionEl.textContent = `${a} × ${b} = ?`;
       optionsEl.innerHTML = '';
       generateOptions(answer).forEach(opt => {
@@ -166,12 +163,14 @@
           if (opt === answer) {
             score++;
             scoreEl.textContent = `Score: ${score}`;
-            correctSound.cloneNode().play().catch(() => {});
+            correctSound.currentTime = 0;
+            correctSound.play().catch(() => {});
             showFeedback('correct');
           } else {
             incorrect++;
             scoreEl.textContent = `Score: ${score}`;
-            wrongSound.cloneNode().play().catch(() => {});
+            wrongSound.currentTime = 0;
+            wrongSound.play().catch(() => {});
             showFeedback('wrong');
           }
         };
@@ -180,39 +179,45 @@
     }
 
     function updateTimer() {
-      const m = Math.floor(timeLeft/60), s = timeLeft%60;
-      timerEl.textContent = `Time: ${m}:${s.toString().padStart(2,'0')}`;
+      const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+      timerEl.textContent = `Time: ${m}:${s.toString().padStart(2, '0')}`;
     }
 
     function startTimer(sec) {
-      timeLeft = sec; updateTimer();
+      timeLeft = sec;
+      updateTimer();
+      clearInterval(timerInterval);
       timerInterval = setInterval(() => {
         timeLeft--;
         updateTimer();
         if (timeLeft <= 0) endGame();
-      },1000);
+      }, 1000);
     }
 
     function startGame() {
-      startSound.play().catch(() => {});
-      correctSound.play().catch(() => {}); // unlock correct
-      wrongSound.play().catch(() => {});   // unlock wrong
       score = 0; incorrect = 0;
       scoreEl.textContent = `Score: ${score}`;
-      ['question','options','score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+      ['question', 'options', 'score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
       resultEl.classList.add('hidden');
       const mins = parseInt(document.getElementById('timeSelect').value, 10);
-      startTimer(mins*60);
+      startTimer(mins * 60);
+      startSound.currentTime = 0;
+      startSound.play().catch(() => {});
       displayQuestion();
     }
 
     function endGame() {
       clearInterval(timerInterval);
       gameoverSound.play().catch(() => {});
-      ['question','options'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      ['question', 'options'].forEach(id => document.getElementById(id).classList.add('hidden'));
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}`;
       resultEl.classList.remove('hidden');
     }
+
+    // Unlock audio on first user tap
+    document.body.addEventListener('touchstart', () => {
+      allSounds.forEach(s => s.play().then(() => s.pause()));
+    }, { once: true });
 
     playBtn.addEventListener('click', startGame);
   </script>
