@@ -17,25 +17,19 @@
       text-shadow: 1px 1px 2px #000;
       overflow: hidden;
     }
+
     h1 { color: #00ffcc; margin-bottom: 20px; }
-    .hidden { display: none; }
+
     input, button, select {
       padding: 10px;
-      margin: 5px;
       font-size: 1rem;
+      margin: 5px;
       border-radius: 5px;
-    }
-    button {
-      background: #00ffcc;
       border: none;
-      cursor: pointer;
     }
-    #feedbackScreen, #gameOverScreen, .timer, .question, .score, .result, .options {
-      background: rgba(0,0,0,0.6);
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin: 5px 0;
-    }
+
+    .hidden { display: none; }
+
     .option {
       background: rgba(0,0,0,0.6);
       color: #fff;
@@ -44,8 +38,17 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 1.1rem;
+      margin: 5px;
     }
     .option:hover { background: #00ffcc; color: #000; }
+
+    .timer, .question, .score, .result {
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 5px 0;
+      font-size: 1.4rem;
+    }
 
     #feedbackScreen {
       position: fixed;
@@ -57,13 +60,18 @@
       align-items: center;
       justify-content: center;
       font-size: 140px;
+      color: white;
       font-weight: bold;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease-in-out;
     }
-    #feedbackScreen.correct { background-color: rgba(0, 200, 0, 0.85); }
-    #feedbackScreen.wrong   { background-color: rgba(255, 0, 0, 0.85); }
+    #feedbackScreen.correct {
+      background-color: rgba(0, 200, 0, 0.85);
+    }
+    #feedbackScreen.wrong {
+      background-color: rgba(255, 0, 0, 0.85);
+    }
 
     #gameOverScreen {
       position: fixed;
@@ -81,6 +89,11 @@
       font-weight: bold;
     }
 
+    #savedStats {
+      margin-top: 20px;
+      text-align: center;
+    }
+
     #rankChart {
       margin-top: 20px;
       width: 250px;
@@ -93,19 +106,23 @@
       padding: 10px;
       position: relative;
     }
+
     .rankBar {
       flex: 1;
       width: 100%;
       display: flex;
       align-items: center;
       padding-left: 10px;
+      color: black;
       font-weight: bold;
     }
-    .MathHero     { background: #00ff00; }
-    .MathLegend   { background: #00ccff; }
-    .MathStar     { background: #ffff00; }
-    .GettingIt    { background: #ff9900; }
-    .Starter      { background: #ff0000; }
+
+    .MathHero { background: #00ff00; }
+    .MathLegend { background: #00ccff; }
+    .MathStar { background: #ffff00; }
+    .GettingIt { background: #ff9900; }
+    .Starter { background: #ff0000; }
+
     #indicator {
       position: absolute;
       left: 0;
@@ -120,7 +137,6 @@
 
   <h1>Times Tables Trainer</h1>
 
-  <!-- Auth Section -->
   <div id="authSection">
     <input type="email" id="email" placeholder="Email" /><br>
     <input type="password" id="password" placeholder="Password" /><br>
@@ -128,10 +144,8 @@
     <button id="loginBtn">Log In</button>
   </div>
 
-  <!-- Game Section -->
   <div id="gameSection" class="hidden">
     <div id="welcomeUser"></div>
-
     <label for="timeSelect">Select time:</label>
     <select id="timeSelect">
       <option value="1">1 minute</option>
@@ -149,34 +163,31 @@
     <div class="options hidden" id="options"></div>
     <div class="score hidden" id="score">Score: 0</div>
     <div class="result hidden" id="result"></div>
-    <div id="feedbackScreen"></div>
-    <div id="gameOverScreen">
-      <div><span style="color:black;">GAME</span> <span style="color:blue;">OVER</span></div>
-    </div>
     <div id="savedStats" class="hidden"></div>
-
     <div id="rankChart" class="hidden">
       <div class="rankBar MathHero">Math Hero (&lt; 2s)</div>
-      <div class="rankBar MathLegend">Math Legend (2–3s)</div>
-      <div class="rankBar MathStar">Math Star (3–4s)</div>
-      <div class="rankBar GettingIt">Getting It (4–5s)</div>
+      <div class="rankBar MathLegend">Math Legend (2-3s)</div>
+      <div class="rankBar MathStar">Math Star (3-4s)</div>
+      <div class="rankBar GettingIt">Getting It (4-5s)</div>
       <div class="rankBar Starter">Starter (5s+)</div>
       <div id="indicator"></div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <div id="feedbackScreen"></div>
+  <div id="gameOverScreen">GAME OVER</div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- Firebase Config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBbBRiSBMX-QOe-WXI-BDaKE5nFkr6r4UU",
       authDomain: "timestablestrainer-3ccf8.firebaseapp.com",
       projectId: "timestablestrainer-3ccf8",
-      storageBucket: "timestablestrainer-3ccf8.appspot.com",
+      storageBucket: "timestablestrainer-3ccf8.firebasestorage.app",
       messagingSenderId: "129355540273",
       appId: "1:129355540273:web:be917252eb94bfa938b210",
       measurementId: "G-8RWC8J46ZB"
@@ -185,31 +196,28 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-  </script>
 
-  <!-- Game Logic -->
-  <script>
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const signupBtn = document.getElementById("signupBtn");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const welcomeUser = document.getElementById("welcomeUser");
-    const authSection = document.getElementById("authSection");
-    const gameSection = document.getElementById("gameSection");
+    const authSection = document.getElementById('authSection');
+    const gameSection = document.getElementById('gameSection');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const signupBtn = document.getElementById('signupBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const welcomeUser = document.getElementById('welcomeUser');
 
     let currentUser = null;
 
     signupBtn.onclick = () => {
       auth.createUserWithEmailAndPassword(email.value, password.value)
-        .then(userCred => alert("Signed up!"))
+        .then(user => alert("Signed up!"))
         .catch(err => alert(err.message));
     };
 
     loginBtn.onclick = () => {
       auth.signInWithEmailAndPassword(email.value, password.value)
-        .then(userCred => {
-          currentUser = userCred.user;
+        .then(user => {
+          currentUser = user.user;
           showGame();
         })
         .catch(err => alert(err.message));
@@ -217,10 +225,17 @@
 
     logoutBtn.onclick = () => {
       auth.signOut().then(() => {
-        authSection.classList.remove("hidden");
-        gameSection.classList.add("hidden");
+        currentUser = null;
+        gameSection.classList.add('hidden');
+        authSection.classList.remove('hidden');
       });
     };
+
+    function showGame() {
+      authSection.classList.add('hidden');
+      gameSection.classList.remove('hidden');
+      welcomeUser.textContent = `Welcome, ${currentUser.email}`;
+    }
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -229,28 +244,22 @@
       }
     });
 
-    function showGame() {
-      authSection.classList.add("hidden");
-      gameSection.classList.remove("hidden");
-      welcomeUser.textContent = `Welcome, ${currentUser.email}`;
-    }
-
-    // Game Logic
-    let score = 0, incorrect = 0, totalQuestions = 0;
-    let timeLeft = 0, timerInterval, paused = false, startTime = 0;
+    // Game logic
     const tables = [3, 4, 6, 7, 8, 9, 11, 12];
+    let score = 0, incorrect = 0, timeLeft = 0, timerInterval, paused = false;
+    let totalQuestions = 0, startTime = 0;
 
-    const questionEl = document.getElementById("question");
-    const optionsEl = document.getElementById("options");
-    const scoreEl = document.getElementById("score");
-    const timerEl = document.getElementById("timer");
-    const resultEl = document.getElementById("result");
-    const feedback = document.getElementById("feedbackScreen");
-    const gameOverScreen = document.getElementById("gameOverScreen");
-    const playBtn = document.getElementById("playBtn");
-    const savedStats = document.getElementById("savedStats");
-    const rankChart = document.getElementById("rankChart");
-    const indicator = document.getElementById("indicator");
+    const questionEl = document.getElementById('question');
+    const optionsEl  = document.getElementById('options');
+    const scoreEl    = document.getElementById('score');
+    const timerEl    = document.getElementById('timer');
+    const resultEl   = document.getElementById('result');
+    const playBtn    = document.getElementById('playBtn');
+    const feedback   = document.getElementById('feedbackScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const savedStats = document.getElementById('savedStats');
+    const rankChart = document.getElementById('rankChart');
+    const indicator = document.getElementById('indicator');
 
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random() * tables.length)];
@@ -271,15 +280,15 @@
       paused = true;
       clearInterval(timerInterval);
       feedback.className = type;
-      feedback.textContent = type === "correct" ? "✔" : "✖";
-      feedback.style.opacity = "1";
+      feedback.textContent = type === 'correct' ? '✔' : '✖';
+      feedback.style.opacity = '1';
 
       setTimeout(() => {
-        feedback.style.opacity = "0";
+        feedback.style.opacity = '0';
         if (timeLeft > 0) startTimer(timeLeft);
         displayQuestion();
         paused = false;
-      }, 700);
+      }, 100); // 0.1 seconds
     }
 
     function displayQuestion() {
@@ -288,19 +297,19 @@
       questionEl.textContent = `${a} × ${b} = ?`;
       optionsEl.innerHTML = '';
       generateOptions(answer).forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "option";
+        const btn = document.createElement('button');
+        btn.className = 'option';
         btn.textContent = opt;
         btn.onclick = () => {
           if (paused) return;
           if (opt === answer) {
             score++;
             scoreEl.textContent = `Score: ${score}`;
-            showFeedback("correct");
+            showFeedback('correct');
           } else {
             incorrect++;
             scoreEl.textContent = `Score: ${score}`;
-            showFeedback("wrong");
+            showFeedback('wrong');
           }
         };
         optionsEl.appendChild(btn);
@@ -324,32 +333,37 @@
     }
 
     function startGame() {
-      score = 0; incorrect = 0; totalQuestions = 0;
+      score = 0; incorrect = 0;
+      totalQuestions = 0;
       startTime = Date.now();
       gameOverScreen.style.display = 'none';
       ['question', 'options', 'score'].forEach(id => document.getElementById(id).classList.remove('hidden'));
       resultEl.classList.add('hidden');
       savedStats.classList.add('hidden');
       rankChart.classList.add('hidden');
-      const mins = parseInt(document.getElementById("timeSelect").value);
+      const mins = parseInt(document.getElementById('timeSelect').value, 10);
       startTimer(mins * 60);
       displayQuestion();
     }
 
     function endGame() {
       clearInterval(timerInterval);
-      document.getElementById("question").classList.add("hidden");
-      document.getElementById("options").classList.add("hidden");
-      resultEl.classList.remove("hidden");
-      gameOverScreen.style.display = "flex";
+      ['question', 'options'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      resultEl.classList.remove('hidden');
+      gameOverScreen.style.display = 'flex';
+
+      setTimeout(() => {
+        gameOverScreen.style.display = 'none';
+      }, 1500); // 1.5 seconds
 
       const totalTimeTaken = (Date.now() - startTime) / 1000;
       const avgTime = totalTimeTaken / totalQuestions;
+
       let rank = "Starter";
       if (avgTime < 5) rank = "Getting It";
       if (avgTime < 4) rank = "Math Star";
       if (avgTime < 3) rank = "Math Legend";
-      if (avgTime < 2) rank = "Math Hero";
+      if (avgTime < 2 && avgTime >= 1) rank = "Math Hero";
 
       db.collection("scores").doc(currentUser.uid).set({
         email: currentUser.email,
@@ -363,7 +377,7 @@
       resultEl.innerHTML = `Time's up!<br>Final Score: ${score}<br>Incorrect: ${incorrect}<br>Avg Time/Question: ${avgTime.toFixed(2)}s<br>Rank: ${rank}`;
     }
 
-    playBtn.addEventListener("click", startGame);
+    playBtn.addEventListener('click', startGame);
 
     document.getElementById("checkScoreBtn").addEventListener("click", () => {
       db.collection("scores").doc(currentUser.uid).get().then(doc => {
@@ -372,7 +386,6 @@
           savedStats.classList.remove("hidden");
           return;
         }
-
         const saved = doc.data();
         savedStats.innerHTML = `
           Best Score: ${saved.score}<br>
@@ -385,8 +398,9 @@
 
         const avg = parseFloat(saved.avgTime);
         const chartHeight = rankChart.clientHeight;
-        const y = Math.min(Math.max(avg, 1), 6);
-        const percent = (y - 1) / 5;
+        const max = 6;
+        const y = Math.min(Math.max(avg, 1), max);
+        const percent = (y - 1) / (max - 1);
         indicator.style.top = `${percent * chartHeight}px`;
       });
     });
