@@ -51,25 +51,6 @@
       cursor: pointer;
     }
     .hidden { display: none; }
-    .checkmark, .wrong { 
-      position: fixed; 
-      top: 50%; 
-      left: 50%; 
-      transform: translate(-50%, -50%);
-      font-size: 5rem;
-      font-weight: bold;
-      padding: 20px;
-      border-radius: 10px;
-      color: #fff;
-      text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
-      display: none;
-    }
-    .checkmark {
-      background-color: green;
-    }
-    .wrong {
-      background-color: red;
-    }
   </style>
 </head>
 <body>
@@ -94,10 +75,6 @@
   <div class="score hidden" id="score">Score: 0</div>
   <div class="result hidden" id="result"></div>
 
-  <!-- New screens for checkmark and wrong -->
-  <div class="checkmark" id="checkmark">✔ Correct!</div>
-  <div class="wrong" id="wrong">✖ Incorrect!</div>
-
   <script>
     const startSound    = new Audio('https://cdn.pixabay.com/download/audio/2021/09/13/audio_a162d58fc2.mp3?filename=beep-start-6022.mp3');
     const correctSound  = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_7b55db4ff9.mp3?filename=correct-2-46134.mp3');
@@ -119,9 +96,6 @@
     const resultEl   = document.getElementById('result');
     const playBtn    = document.getElementById('playBtn');
 
-    const checkmarkEl = document.getElementById('checkmark');
-    const wrongEl = document.getElementById('wrong');
-
     function getRandomQuestion() {
       const a = tables[Math.floor(Math.random()*tables.length)];
       const b = Math.floor(Math.random()*12)+1;
@@ -142,19 +116,44 @@
         const btn = document.createElement('button');
         btn.className = 'option';
         btn.textContent = opt;
-        btn.onclick = () => {
+        
+        // Add click and touchstart event listeners for iPad
+        btn.addEventListener('click', () => {
           if (opt === answer) {
             score++;
-            correctSound.play().catch(() => {});
+            correctSound.play().catch(err => {
+              console.error('Error playing correct sound:', err);
+            });
             showCorrectScreen();
           } else {
             incorrect++;
-            wrongSound.play().catch(() => {});
+            wrongSound.play().catch(err => {
+              console.error('Error playing wrong sound:', err);
+            });
             showWrongScreen();
           }
           scoreEl.textContent = `Score: ${score}`;
           displayQuestion();
-        };
+        });
+
+        btn.addEventListener('touchstart', () => {
+          if (opt === answer) {
+            score++;
+            correctSound.play().catch(err => {
+              console.error('Error playing correct sound:', err);
+            });
+            showCorrectScreen();
+          } else {
+            incorrect++;
+            wrongSound.play().catch(err => {
+              console.error('Error playing wrong sound:', err);
+            });
+            showWrongScreen();
+          }
+          scoreEl.textContent = `Score: ${score}`;
+          displayQuestion();
+        });
+        
         optionsEl.appendChild(btn);
       });
     }
@@ -171,28 +170,6 @@
         updateTimer();
         if (timeLeft <= 0) endGame();
       },1000);
-    }
-
-    function showCorrectScreen() {
-      checkmarkEl.style.display = 'block';
-      setTimeout(() => {
-        checkmarkEl.style.display = 'none';
-      }, 700);
-      clearInterval(timerInterval);
-      setTimeout(() => {
-        startTimer(timeLeft);
-      }, 700);
-    }
-
-    function showWrongScreen() {
-      wrongEl.style.display = 'block';
-      setTimeout(() => {
-        wrongEl.style.display = 'none';
-      }, 700);
-      clearInterval(timerInterval);
-      setTimeout(() => {
-        startTimer(timeLeft);
-      }, 700);
     }
 
     function startGame() {
