@@ -56,12 +56,19 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 3rem;
+      font-size: 5rem; /* Bigger check and X */
       font-weight: bold;
       display: none;
+      animation: feedbackAnimation 0.7s forwards;
     }
     .correct { color: green; }
     .incorrect { color: red; }
+
+    /* Add animation for feedback visibility */
+    @keyframes feedbackAnimation {
+      0% { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
   </style>
 </head>
 <body>
@@ -202,12 +209,11 @@
       resultEl.classList.remove('hidden');
     }
 
-    playBtn.addEventListener('click', startGame);
-
-    // Test correct sound on page load
-    window.onload = () => {
-      correctSound.play().catch(() => console.log("Sound failed to load"));
-    };
+    // Ensure sound works by prompting the user
+    playBtn.addEventListener('click', () => {
+      startSound.play();
+      startGame();
+    });
   </script>
 </body>
 </html>
